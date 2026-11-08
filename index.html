@@ -6,26 +6,10 @@
 <section class="lock" id="lock"><div><div class="locktime" id="lockTime">09:41</div><div class="lockdate" id="lockDate">Понедельник, 8 ноября</div></div><div class="lockhint">Смахните вверх, чтобы разблокировать<div class="swipebar"></div></div></section>
 <section class="screen active" id="home"><div class="homewall"><div class="greeting">Мой телефон · <span id="homeClock">09:41</span></div><h1 style="font-size:30px">Привет!</h1><p class="muted">Пора найти выгодную сделку.</p><div class="appgrid">
 <button class="appicon" onclick="openOvito()"><div class="ico ovitoico">O</div>Ovito</button>
-<button class="appicon" onclick="openApp('messages')"><div class="ico msgico">✉</div>Сообщения</button>
 <button class="appicon" onclick="openApp('route')"><div class="ico routeico">➤</div>Маршрут</button>
-<button class="appicon" onclick="openApp('phoneapp')"><div class="ico phoneico">☎</div>Телефон</button>
 <button class="appicon" onclick="openApp('bank')"><div class="ico" style="background:linear-gradient(145deg,#ffb33f,#f36a13);color:white;font-weight:900">S</div>Skebob Bank</button>
-<button class="appicon" onclick="openApp('autobuy')"><div class="ico" style="background:#f4f5f6;color:#226b45">🚘</div>AvtoBuy</button>
-<button class="appicon" onclick="openApp('transport')"><div class="ico" style="background:#f4f5f6;color:#d52c4b">📍</div>Транспорт</button>
-<button class="appicon" onclick="openApp('garage')"><div class="ico" style="background:#12517e;color:white">🚗</div>Гараж</button>
-<button class="appicon" onclick="openApp('pbank')"><div class="ico" style="background:#ff8519;color:white">П</div>П-Банк</button>
-<button class="appicon" onclick="openApp('plamefin')"><div class="ico" style="background:#111;color:#ffd51c">▤</div>PlameFinance</button>
-<button class="appicon" onclick="openApp('sleep')"><div class="ico" style="background:#fff;color:#111">💤</div>Сон</button>
-<button class="appicon" onclick="openApp('calendar')"><div class="ico" style="background:#fff;color:#df334b">17</div>Календарь</button>
-<button class="appicon" onclick="openApp('mestobuy')"><div class="ico" style="background:#0755bd;color:white">P</div>MestoBuy</button>
-<button class="appicon" onclick="openApp('notepad')"><div class="ico" style="background:#dff5ff;color:#236c9a">📝</div>Блокнот</button>
-<button class="appicon" onclick="openApp('plameblock')"><div class="ico" style="background:#f47716;color:white">▦</div>PlameBlock</button>
-<button class="appicon" onclick="openApp('driveace')"><div class="ico" style="background:#f45a19;color:white">🏎</div>Drive Ace</button>
-<button class="appicon" onclick="openApp('clockapp')"><div class="ico" style="background:#fff;color:#222">◷</div>Часы</button>
-<button class="appicon" onclick="openApp('support')"><div class="ico" style="background:#ef3d55;color:white">♥</div>Поддержка</button>
-<button class="appicon" onclick="openApp('tasks')"><div class="ico" style="background:#f47716;color:white">🏆</div>Задания</button>
 <button class="appicon" onclick="openApp('settings')"><div class="ico settingsico">⚙</div>Настройки</button>
-</div></div><div class="dock"><button onclick="openApp('phoneapp')">☎</button><button onclick="openApp('messages')">▤</button><button onclick="openApp('camera')">▣</button><button onclick="openApp('browser')">◉</button></div></section>
+</div></div><div class="dock"><button aria-label="Телефон" onclick="openApp('phoneapp')">☎</button><button aria-label="Сообщения" onclick="openApp('messages')">▤</button></div></section>
 <section class="screen" id="ovito"><div class="topline"><div class="brand">O<span>vito</span></div><div class="balance" id="balance">₽ 1 000</div></div><div class="row"><h2>Объявления</h2><span class="small muted" id="gameTime">09:41</span></div><input class="search" id="search" placeholder="Поиск одежды и брендов…" oninput="renderListings()"><div class="chips" id="filters"></div><div id="ovContent"></div><nav class="bottomnav"><button class="active" onclick="ovTab('feed',this)"><b>⌕</b>Лента</button><button onclick="ovTab('chats',this)"><b>☏</b>Чаты</button><button onclick="showCreate()"><b>＋</b>Добавить</button><button onclick="ovTab('profile',this)"><b>♙</b>Профиль</button></nav></section>
 <section class="screen" id="detail"><button class="back" onclick="openOvito()">← Назад к объявлениям</button><div id="detailContent"></div></section>
 <section class="screen" id="chat"><button class="back" onclick="openOvito()">← К Ovito</button><div id="chatContent"></div></section>
@@ -33,22 +17,6 @@
 <section class="screen" id="messages"><button class="back" onclick="goHome()">← На главный экран</button><h1>Сообщения</h1><div id="systemMessages" class="card">Здесь будут уведомления и переписки из Ovito.</div></section>
 <section class="screen" id="phoneapp"><button class="back" onclick="goHome()">← На главный экран</button><h1>Телефон</h1><div class="card"><div style="font-size:38px;text-align:center">☎</div><p class="muted" style="text-align:center">История звонков пока пуста</p></div></section>
 <section class="screen" id="bank"><button class="back" onclick="goHome()">← На главный экран</button><div class="row"><h1>Skebob Bank</h1><span class="pill">VISA</span></div><div class="card" style="background:linear-gradient(130deg,#f18b24,#d94b17);border:0;padding:22px;min-height:170px;display:flex;flex-direction:column;justify-content:space-between"><div class="row"><b style="font-size:20px">SKEBOB BANK</b><span>◈</span></div><div style="font-size:22px;letter-spacing:3px">•••• •••• •••• 2048</div><div class="row"><span>ИГРОК</span><b>SKB PLAYER</b></div></div><div class="card"><div class="muted small">ДОСТУПНЫЙ БАЛАНС</div><div id="bankBalance" style="font-size:32px;font-weight:850;margin-top:5px">0 ₽</div><div class="small muted">Основной игровой счёт</div></div><h2>Расходы и списания</h2><div id="bankTransactions"></div></section>
-<section class="screen" id="camera"><button class="back" onclick="goHome()">← На главный экран</button><h1>Камера</h1><div class="card empty">Камера телефона · пока нет снимков</div></section>
-<section class="screen" id="browser"><button class="back" onclick="goHome()">← На главный экран</button><h1>Браузер</h1><div class="card"><input class="field" placeholder="Поиск в интернете"><p class="muted small">Внутриигровой браузер скоро появится.</p></div></section>
-<section class="screen" id="autobuy"><button class="back" onclick="goHome()">← На главный экран</button><h1>AvtoBuy</h1><div class="card">Автомобильный рынок · объявления и сделки появятся здесь.</div></section>
-<section class="screen" id="transport"><button class="back" onclick="goHome()">← На главный экран</button><h1>Транспорт</h1><div class="card">Транспортная карта и поездки по городу.</div><button class="btn" onclick="openApp('route')">Открыть маршруты</button></section>
-<section class="screen" id="garage"><button class="back" onclick="goHome()">← На главный экран</button><h1>Гараж</h1><div class="card">Твой гараж пока пуст.</div></section>
-<section class="screen" id="pbank"><button class="back" onclick="goHome()">← На главный экран</button><h1>П-Банк</h1><div class="card">Дополнительный игровой банк.</div><button class="btn" onclick="openApp('bank')">Открыть Skebob Bank</button></section>
-<section class="screen" id="plamefin"><button class="back" onclick="goHome()">← На главный экран</button><h1>PlameFinance</h1><div class="card">Финансы и статистика игрового бизнеса.</div><button class="btn" onclick="openApp('bank')">Мой баланс</button></section>
-<section class="screen" id="sleep"><button class="back" onclick="goHome()">← На главный экран</button><h1>Сон</h1><div class="card">Планировщик отдыха персонажа.</div></section>
-<section class="screen" id="calendar"><button class="back" onclick="goHome()">← На главный экран</button><h1>Календарь</h1><div class="card">Игровые встречи и события.</div></section>
-<section class="screen" id="mestobuy"><button class="back" onclick="goHome()">← На главный экран</button><h1>MestoBuy</h1><div class="card">Поиск мест и заведений города.</div></section>
-<section class="screen" id="notepad"><button class="back" onclick="goHome()">← На главный экран</button><h1>Блокнот</h1><textarea class="field" rows="8" placeholder="Твои заметки..."></textarea></section>
-<section class="screen" id="plameblock"><button class="back" onclick="goHome()">← На главный экран</button><h1>PlameBlock</h1><div class="card">Инвентарь и предметы персонажа.</div></section>
-<section class="screen" id="driveace"><button class="back" onclick="goHome()">← На главный экран</button><h1>Drive Ace</h1><div class="card">Автомобильная игра скоро откроется.</div></section>
-<section class="screen" id="clockapp"><button class="back" onclick="goHome()">← На главный экран</button><h1>Часы</h1><div class="card" id="clockFace" style="font-size:38px;text-align:center">09:41</div></section>
-<section class="screen" id="support"><button class="back" onclick="goHome()">← На главный экран</button><h1>Поддержка</h1><div class="card">Центр помощи Skebob.</div></section>
-<section class="screen" id="tasks"><button class="back" onclick="goHome()">← На главный экран</button><h1>Задания</h1><div class="card">Ежедневные задания и награды.</div></section>
 <section class="screen" id="settings"><button class="back" onclick="goHome()">← На главный экран</button><h1>Настройки</h1><div class="card"><div class="row"><span>Игровое время</span><b>1 минута = 1 час</b></div><div class="divider"></div><div class="row"><span>Сохранение</span><b class="profit">Автоматически</b></div><div class="btnrow"><button class="btn secondary" onclick="if(confirm('Сбросить весь прогресс?'))resetGame()">Сбросить игру</button></div></div></section>
 </main>
 <script>
@@ -92,7 +60,7 @@ function renderBank(){if(!$('bankBalance'))return;$('bankBalance').textContent=m
 function save(){localStorage.setItem('skebobSave',JSON.stringify(state));$('balance').textContent='₽ '+state.balance.toLocaleString('ru-RU');$('currentDistrict').textContent=state.district;$('routeClock').textContent=clock();$('gameTime').textContent=clock();renderBank()}
 function clock(){let m=9*60+41+state.minutes;return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
 function updateClock(){let d=new Date();let t=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});$('statusTime').textContent=t;$('lockTime').textContent=t;$('homeClock').textContent=t;$('lockDate').textContent=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});$('gameTime').textContent=clock()}
-setInterval(()=>{state.minutes+=60;save();updateClock()},60000);updateClock();
+setInterval(()=>{state.minutes+=1;save();updateClock()},1000);updateClock();
 const lock=$('lock');let startY=0;lock.addEventListener('touchstart',e=>startY=e.touches[0].clientY);lock.addEventListener('touchend',e=>{if(startY-e.changedTouches[0].clientY>45)unlock()});lock.addEventListener('pointerdown',e=>startY=e.clientY);lock.addEventListener('pointerup',e=>{if(startY-e.clientY>45)unlock()});function unlock(){lock.classList.add('hide')}
 function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
 function goHome(){show('home')}function openApp(id){show(id);if(id==='route')renderDistricts();if(id==='bank')renderBank()}function openOvito(){show('ovito');ovTab('feed')}
