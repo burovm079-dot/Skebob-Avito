@@ -54,7 +54,7 @@ let activeFilter='Все',currentItem=null,currentChat=null,dealTime='',dealDist
 function save(){localStorage.setItem('skebobSave',JSON.stringify(state));$('balance').textContent='₽ '+state.balance.toLocaleString('ru-RU');$('currentDistrict').textContent=state.district;$('routeClock').textContent=clock();$('gameTime').textContent=clock()}
 function clock(){let m=9*60+41+state.minutes;return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
 function updateClock(){let d=new Date();let t=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});$('statusTime').textContent=t;$('lockTime').textContent=t;$('homeClock').textContent=t;$('lockDate').textContent=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});$('gameTime').textContent=clock()}
-setInterval(()=>{state.minutes++;save();updateClock()},60000);updateClock();
+setInterval(()=>{state.minutes+=60;save();updateClock()},60000);updateClock();
 const lock=$('lock');let startY=0;lock.addEventListener('touchstart',e=>startY=e.touches[0].clientY);lock.addEventListener('touchend',e=>{if(startY-e.changedTouches[0].clientY>45)unlock()});lock.addEventListener('pointerdown',e=>startY=e.clientY);lock.addEventListener('pointerup',e=>{if(startY-e.clientY>45)unlock()});function unlock(){lock.classList.add('hide')}
 function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
 function goHome(){show('home')}function openApp(id){show(id);if(id==='route')renderDistricts()}function openOvito(){show('ovito');ovTab('feed')}
