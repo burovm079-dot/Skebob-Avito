@@ -25,7 +25,7 @@ const $=id=>document.getElementById(id);
 const freshStart=new URLSearchParams(location.search).has('newgame');
 let state=null;
 try{state=freshStart?null:JSON.parse(localStorage.getItem('skebobSave')||'null')}catch(e){state=null}
-if(!state||typeof state!=='object'){
+if(!(state && typeof state === 'object')){
  state={balance:1000,initialBalance:1000,district:'Центр',minutes:0,items:[],chats:[],myListings:[],owned:[],deal:null,blocked:[],transactions:[]};
 }else{
  state.balance=Number.isFinite(Number(state.balance))?Math.max(0,Number(state.balance)):1000;
