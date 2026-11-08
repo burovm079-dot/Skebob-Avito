@@ -64,6 +64,9 @@ let lastRealTick=Date.now();setInterval(()=>{let now=Date.now();let elapsed=Math
 const lock=$('lock');let startY=0;lock.addEventListener('touchstart',e=>startY=e.touches[0].clientY);lock.addEventListener('touchend',e=>{if(startY-e.changedTouches[0].clientY>45)unlock()});lock.addEventListener('pointerdown',e=>startY=e.clientY);lock.addEventListener('pointerup',e=>{if(startY-e.clientY>45)unlock()});function unlock(){lock.classList.add('hide')}
 function show(id){const target=$(id);if(!target)return;lock.classList.add('hide');document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));target.classList.add('active')}
 function goHome(){lock.classList.add('hide');show('home');window.scrollTo(0,0)}function openApp(id){show(id);if(id==='route')renderDistricts();if(id==='bank')renderBank()}function openOvito(){show('ovito');ovTab('feed')}
+// Android/browser Back: keep the game open and return to its home screen.
+function keepGameInHistory(){try{history.pushState({skebobGame:true},'',location.href)}catch(e){}}
+keepGameInHistory();window.addEventListener('popstate',()=>{lock.classList.add('hide');show('home');window.scrollTo(0,0);keepGameInHistory()});
 function ovTab(tab,el){const nav=document.querySelector('#ovito .bottomnav');nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));const ix={feed:0,chats:1,profile:3}[tab];if(ix!==undefined)nav.querySelectorAll('button')[ix].classList.add('active');$('ovContent').scrollTop=0;if(tab==='feed')renderListings();if(tab==='chats')renderChats();if(tab==='profile')renderProfile()}
 function initFilters(){$('filters').innerHTML=categories.map(c=>'<button class="chip '+(c===activeFilter?'selected':'')+'" onclick="setFilter(\''+c+'\')">'+c+'</button>').join('')}
 function setFilter(c){activeFilter=c;initFilters();renderListings()}
