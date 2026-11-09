@@ -26,7 +26,7 @@
 #ovito .bottomnav{height:70px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-around;padding:5px 2px calc(5px + env(safe-area-inset-bottom))!important;color:#777;box-shadow:0 -3px 14px #00008}
 #ovito .bottomnav button{position:relative;flex:1;min-width:0;border:0;background:transparent;color:#727b83;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;padding:2px 0;white-space:nowrap}
 #ovito .bottomnav button b{font-size:25px;line-height:26px;font-weight:500}
-#ovito .bottomnav button.active{color:#0785f5}
+#ovito .bottomnav button.active{color:#0785f5}#ovito .bottomnav .nav-add.active{color:#fff}
 #ovito .bottomnav .nav-add{flex:0 0 68px;width:68px;height:68px;margin-top:-38px;border-radius:50%;background:#0785f5;color:#fff;box-shadow:0 4px 10px #0003}
 #ovito .bottomnav .nav-add b{font-size:42px;line-height:50px}
 #ovito .ov-card{background:#fff;border-radius:22px;overflow:hidden;margin:0 0 18px;box-shadow:0 8px 24px #0000000d}
@@ -205,7 +205,7 @@ function renderListings(){
 }
 function renderFavorites(){
  const data=listings.filter(x=>(state.favorites||[]).includes(x.id));
- $('ovContent').innerHTML='<div class="ov-page-title">Избранное</div>'+(data.length?data.map(listingCard).join(''):'<div class="ov-empty"><div class="ov-empty-icon">♧</div>В избранном пока ничего нет</div>');
+ $('ovContent').innerHTML=(data.length?data.map(listingCard).join(''):'<div class="ov-empty"><div class="ov-empty-icon">♧</div>В избранном пока ничего нет</div>');
 }
 function openDetail(id){currentItem=listings.find(x=>x.id===id);if(!currentItem)return;detailFrom='feed';$('detailContent').innerHTML='<div class="heroart">'+(currentItem.image?'<img src="'+currentItem.image+'" alt="">':currentItem.emoji)+'</div><div class="row"><span class="pill">'+currentItem.brand+'</span><span class="small muted">'+currentItem.condition+'</span></div><h1 style="margin-top:10px">'+currentItem.title+'</h1><div class="row"><div><div class="price" style="font-size:25px">'+money(currentItem.price)+'</div><div class="muted small">Цена продавца</div></div><div style="text-align:right"><div class="price profit">'+money(currentItem.market)+'</div><div class="muted small">Рыночная стоимость</div></div></div><div class="card"><h3>Описание</h3>'+currentItem.desc+'<div class="divider"></div><div class="row"><span class="muted">Продавец</span><b>'+currentItem.seller+'</b></div><div class="row" style="margin-top:8px"><span class="muted">Район</span><b>'+currentItem.district+'</b></div></div><div class="notice">'+(currentItem.market>currentItem.price?'Потенциальная выгода: <b class="profit">'+money(currentItem.market-currentItem.price)+'</b>':'Цена примерно соответствует рынку. Торг может сделать покупку выгоднее.')+'</div><button class="btn" style="width:100%" onclick="startChat(\''+currentItem.id+'\')">Купить / договориться</button>';show('detail')}
 function startChat(id){let item=listings.find(x=>x.id===id);if(!item)return;if(item.mine||item.seller==='Ты'){alert('Нельзя начать покупку собственного объявления.');return}let c=state.chats.find(x=>x.itemId===id);if(!c){c={id:'c'+Date.now()+Math.floor(Math.random()*1000),itemId:id,title:item.title,seller:item.seller,attempts:0,blockAt:rand(3,5),blocked:false,agreed:false,messages:[{from:'seller',text:'Здравствуйте! Да, объявление актуально.'}],status:'Торг'};state.chats.unshift(c)}currentChat=c.id;save();renderChat()}
