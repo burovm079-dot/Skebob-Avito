@@ -38,6 +38,7 @@ if(state===null || Array.isArray(state) || typeof state !== "object"){
 }
 if(freshStart){history.replaceState(null,'',location.pathname)}
 try{localStorage.setItem('skebobSave',JSON.stringify(state))}catch(e){}
+const ADMIN_ACCESS_CODE='Try_619hTso!gs';
 const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const money=n=>Math.max(0,Number(n)||0).toLocaleString('ru-RU')+' ₽';
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -92,8 +93,7 @@ function renderChat(){
 function processBuyerActivity(){
  if(!Array.isArray(state.myListings)||!state.myListings.length)return;
  let changed=false;
- const dayStart=Math.floor(state.minutes/1440)*1440;
- const recentBuyers=state.chats.filter(c=>c.kind==='buyer'&&Number(c.createdAt)>=state.minutes-1440).length;
+ let recentBuyers=state.chats.filter(c=>c.kind==='buyer'&&Number.isFinite(Number(c.createdAt))&&Number(c.createdAt)>=state.minutes-1440).length;
  for(const own of state.myListings){
   if(!own||!own.id)continue;
   const listing=listings.find(x=>x.id===own.id);
@@ -111,10 +111,10 @@ function processBuyerActivity(){
   const name=(available.length?available:names)[rand(0,(available.length?available:names).length-1)];
   const minPct=demand==='high'?92:demand==='normal'?82:68;
   const maxPct=demand==='high'?100:demand==='normal'?94:84;
-  const offer=Math.max(100,Math.round(listing.price*rand(minPct,maxPct)/100/50)*50);
+  const offer=Math.min(listing.price,Math.max(100,Math.round(listing.price*rand(minPct,maxPct)/100/50)*50));
   const phrases=demand==='high'?['Здравствуйте! Увидел(а) объявление, цена хорошая. Ещё продаёте?','Добрый день! Готов(а) забрать. Можно уточнить состояние?','Привет! Заинтересовала вещь. Могу предложить '+money(offer)+'.']:demand==='normal'?['Здравствуйте! Объявление ещё актуально?','Добрый день! Есть небольшой торг? Могу предложить '+money(offer)+'.','Привет! Подскажите, пожалуйста, размер и состояние.']:['Здравствуйте! Вещь интересная, но цена немного выше моего бюджета. Рассмотрите '+money(offer)+'?','Добрый день! Если уступите по цене, готов(а) приехать забрать.','Привет! Могу предложить '+money(offer)+' и забрать без долгих ожиданий.'];
   const c={id:'buyer'+Date.now()+rand(100,999),kind:'buyer',itemId:listing.id,title:listing.title,seller:name,buyerName:name,offerPrice:offer,attempts:0,agreed:false,status:'Новое сообщение',unread:true,createdAt:state.minutes,messages:[{from:'buyer',text:phrases[rand(0,phrases.length-1)]}]};
-  state.chats.unshift(c);own.buyerChatsCount=count+1;
+  state.chats.unshift(c);recentBuyers++;own.buyerChatsCount=count+1;
   own.buyerNextAt=state.minutes+(demand==='high'?rand(240,480):demand==='normal'?rand(360,720):rand(600,1080));
   own.views=(Number(own.views)||0)+rand(3,14);changed=true;
   showBuyerToast('Новое сообщение от '+name+' по объявлению «'+listing.title+'»');
