@@ -156,10 +156,10 @@ function showBuyerToast(message){
 }
 function sendBuyerReply(){
  const c=state.chats.find(x=>x.id===currentChat);if(!c||c.kind!=='buyer'||c.status==='Продано')return;
- const item=listings.find(x=>x.id===c.itemId),field=$('buyerReplyPrice'),amount=Number(field?.value);
+ const item=listings.find(x=>x.id===c.itemId),field=$('buyerReplyPrice'),rawAmount=Number(field?.value);
  if(!item){alert('Объявление больше недоступно.');return}
- if(!Number.isSafeInteger(amount)||amount<1||amount>1000000){alert('Укажи корректную сумму от 1 до 1 000 000 ₽.');return}
- const ceiling=Math.max(1,Math.round(Number(item.price)||amount)),previous=Math.min(ceiling,Math.max(0,Number(c.offerPrice)||0));amount=Math.min(amount,ceiling);
+ if(!Number.isSafeInteger(rawAmount)||rawAmount<1||rawAmount>1000000){alert('Укажи корректную сумму от 1 до 1 000 000 ₽.');return}
+ const ceiling=Math.max(1,Math.round(Number(item.price)||rawAmount)),previous=Math.min(ceiling,Math.max(0,Number(c.offerPrice)||0)),amount=Math.min(rawAmount,ceiling);
  let message,reply;
  if(amount>=ceiling){message='Согласен(на) на '+money(ceiling)+'. Давайте договоримся о встрече.';c.offerPrice=ceiling;c.agreed=true;c.status='Покупатель готов к встрече';reply='Отлично! Договорились за '+money(ceiling)+'. Нажми «Завершить продажу», когда передашь вещь.'}
  else if(amount>previous){message='Могу уступить до '+money(amount)+'.';c.offerPrice=amount;c.status='Торг';reply='Спасибо за встречное предложение. Я подумаю над этой суммой.'}
