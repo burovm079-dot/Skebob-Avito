@@ -169,7 +169,9 @@ function sendBuyerReply(){
 function acceptBuyerOffer(){
  const c=state.chats.find(x=>x.id===currentChat),item=c&&listings.find(x=>x.id===c.itemId);
  if(!c||c.kind!=='buyer'||!item||c.status==='Продано')return;
- c.agreed=true;c.status='Покупатель готов к встрече';c.messages.push({from:'me',text:'Согласен(на) на '+money(c.offerPrice)+'. Давайте договоримся о встрече.'},{from:'buyer',text:'Отлично! Считаю, что договорились. Нажми «Завершить продажу», когда передашь вещь.'});
+ const amount=Math.min(Math.max(1,Math.round(Number(item.price)||1)),Math.max(0,Math.round(Number(c.offerPrice)||0)));
+ if(!Number.isSafeInteger(amount)||amount<1){alert('У покупателя пока нет корректного предложения.');return}
+ c.offerPrice=amount;c.agreed=true;c.status='Покупатель готов к встрече';c.messages.push({from:'me',text:'Согласен(на) на '+money(amount)+'. Давайте договоримся о встрече.'},{from:'buyer',text:'Отлично! Считаю, что договорились. Нажми «Завершить продажу», когда передашь вещь.'});
  save();renderChat();
 }
 function completeBuyerSale(){
