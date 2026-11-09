@@ -207,38 +207,26 @@ function renderChats(){
  $('ovContent').innerHTML=cards||'<div class="empty">Пока нет чатов. Открой объявление и нажми «Купить».</div>';
 }
 function renderProfile(){$('ovContent').innerHTML='<div class="card"><div class="row"><span>Баланс</span><b class="profit">'+money(state.balance)+'</b></div><div class="row" style="margin-top:10px"><span>Мои покупки</span><b>'+state.owned.length+'</b></div><div class="row" style="margin-top:10px"><span>Мои объявления</span><b>'+state.myListings.length+'</b></div></div><h3>Мои объявления</h3>'+(state.myListings.length?state.myListings.map(x=>'<div class="card"><div class="row"><b>'+x.emoji+' '+x.title+'</b><b>'+money(x.price)+'</b></div><div class="btnrow"><button class="btn danger" onclick="deleteListing(\''+x.id+'\')">Удалить</button></div></div>').join(''):'<div class="empty">Ты ещё не выставлял вещи.</div>')+'<h3>Мой гардероб</h3>'+(state.owned.length?state.owned.map(x=>'<div class="card"><div class="row"><b>'+x.emoji+' '+x.title+'</b><span class="small muted">Куплено за '+money(x.buyPrice)+'</span></div><button class="btn secondary" style="margin-top:10px" onclick="sellOwned(\''+x.id+'\')">Выставить на продажу</button></div>').join(''):'<div class="empty">Пока пусто — найди первую выгодную покупку!</div>')}
-let selectedListingPhoto=null;
 function showCreate(){
- selectedListingPhoto=null;
  if(!state.owned.length){$('ovContent').innerHTML='<h2>Новое объявление</h2><div class="empty">В гардеробе пока нет вещей для продажи. Сначала купи предмет в ленте — после покупки он появится здесь.</div><button class="btn secondary" style="width:100%" onclick="ovTab(\'feed\')">Перейти в каталог</button>';return}
- $('ovContent').innerHTML='<h2>Новое объявление</h2><p class="small muted">Выбери вещь из гардероба и добавь её настоящую фотографию с телефона. Остальные данные подставятся автоматически.</p><label class="small muted" for="inventoryItem">Какую вещь выставить?</label><select class="field" id="inventoryItem" onchange="previewInventoryItem()">'+state.owned.map(x=>'<option value="'+escapeHTML(x.id)+'">'+escapeHTML(x.title)+' · '+money(x.buyPrice||x.market||0)+'</option>').join('')+'</select><label class="small muted" for="listingPhoto">Фотография предмета</label><input class="field" style="padding:9px" id="listingPhoto" type="file" accept="image/*" capture="environment" onchange="handleListingPhoto(event)"><div id="inventoryPreview" class="card"></div><label class="small muted" for="newPrice">Цена продажи, ₽</label><input class="field" id="newPrice" type="number" min="100" max="100000" step="1" placeholder="Например, 2500"><button class="btn" style="width:100%" onclick="createListing()">Опубликовать объявление</button>';
+ $('ovContent').innerHTML='<h2>Новое объявление</h2><p class="small muted">Выбери вещь из гардероба. Фото, название, бренд и описание уже привязаны к предмету.</p><label class="small muted" for="inventoryItem">Какую вещь выставить?</label><select class="field" id="inventoryItem" onchange="previewInventoryItem()">'+state.owned.map(x=>'<option value="'+escapeHTML(x.id)+'">'+escapeHTML(x.title)+' · '+money(x.buyPrice||x.market||0)+'</option>').join('')+'</select><div id="inventoryPreview" class="card"></div><label class="small muted" for="newPrice">Цена продажи, ₽</label><input class="field" id="newPrice" type="number" min="100" max="100000" step="1" placeholder="Например, 2500"><button class="btn" style="width:100%" onclick="createListing()">Опубликовать объявление</button>';
  previewInventoryItem();
-}
-function handleListingPhoto(event){
- const file=event.target.files&&event.target.files[0];if(!file)return;
- if(!file.type.startsWith('image/')){alert('Выбери файл изображения.');event.target.value='';return}
- if(file.size>5*1024*1024){alert('Фото должно быть меньше 5 МБ.');event.target.value='';return}
- const reader=new FileReader();
- reader.onload=()=>{selectedListingPhoto=reader.result;previewInventoryItem()};
- reader.onerror=()=>alert('Не удалось прочитать фотографию. Попробуй другое изображение.');
- reader.readAsDataURL(file);
 }
 function previewInventoryItem(){
  const id=$('inventoryItem')?.value,x=state.owned.find(a=>a.id===id),preview=$('inventoryPreview');if(!preview)return;
  if(!x){preview.innerHTML='<div class="muted">Предмет не найден.</div>';return}
- const photo=selectedListingPhoto||x.image||'';
- preview.innerHTML=(photo?'<div style="height:180px;margin-bottom:12px;border-radius:12px;overflow:hidden;background:#101a28"><img src="'+photo+'" alt="Фото предмета" style="width:100%;height:100%;object-fit:contain"></div>':'<div class="notice">Добавь фотографию вещи — она будет показана в объявлении.</div>')+'<div class="row"><b>'+escapeHTML(x.title)+'</b><span class="pill">'+escapeHTML(x.cat||'Вещь')+'</span></div><p class="small muted" style="margin:8px 0">'+escapeHTML(x.brand||'Без бренда')+'</p><p style="margin:0">'+escapeHTML(x.desc||'Описание отсутствует.')+'</p><div class="small muted" style="margin-top:9px">Ориентир цены: '+money(Math.max(100,Number(x.market||x.buyPrice||1000)-Number(x.conditionLoss||0)))+'</div>';
+ const photo=x.image||'';
+ preview.innerHTML+(photo?'<div style="height:180px;margin-bottom:12px;border-radius:12px;overflow:hidden;background:#101a28"><img src="'+photo+'" alt="Фото предмета" style="width:100%;height:100%;object-fit:contain"></div>':'<div class="itemart" style="height:150px;margin-bottom:12px">'+(x.emoji||'👕')+'</div>')+'<div class="row"><b>'+escapeHTML(x.title)+'</b><span class="pill">'+escapeHTML(x.cat||'Вещь')+'</span></div><p class="small muted" style="margin:8px 0">'+escapeHTML(x.brand||'Без бренда')+'</p><p style="margin:0">'+escapeHTML(x.desc||'Описание отсутствует.')+'</p><div class="small muted" style="margin-top:9px">Ориентир цены: '+money(Math.max(100,Number(x.market||x.buyPrice||1000)-Number(x.conditionLoss||0)))+'</div>';
  const price=$('newPrice');if(price&&!price.value)price.value=Math.min(100000,Math.max(100,Math.round((Number(x.market||x.buyPrice||1000)-Number(x.conditionLoss||0))/100)*100));
 }
 function createListing(){
- const id=$('inventoryItem')?.value,x=state.owned.find(a=>a.id===id),price=Number($('newPrice')?.value),photo=selectedListingPhoto||x?.image||'';
+ const id=$('inventoryItem')?.value,x=state.owned.find(a=>a.id===id),price=Number($('newPrice')?.value);
  if(!x){alert('Сначала выбери предмет из своего гардероба.');return}
- if(!photo){alert('Добавь фотографию предмета перед публикацией.');return}
  if(!Number.isSafeInteger(price)||price<100||price>100000){alert('Укажи целую цену от 100 до 100 000 ₽.');return}
  if(state.myListings.some(a=>a.inventoryId===id)){alert('Этот предмет уже выставлен на продажу.');return}
  const market=Math.max(100,Number(x.market||x.buyPrice||price)-Number(x.conditionLoss||0));
- const l={...x,image:photo,id:'u'+Date.now()+Math.floor(Math.random()*1000),inventoryId:id,price,market,seller:'Ты',district:state.district,mine:true,condition:x.condition||'Состояние уточняется',buyerNextAt:state.minutes+rand(8,28),buyerChatsCount:0,views:0};
- state.owned=state.owned.filter(a=>a.id!==id);state.myListings.unshift(l);listings.unshift(l);selectedListingPhoto=null;save();ovTab('profile');
+ const l={...x,id:'u'+Date.now()+Math.floor(Math.random()*1000),inventoryId:id,price,market,seller:'Ты',district:state.district,mine:true,condition:x.condition||'Состояние уточняется',buyerNextAt:state.minutes+rand(8,28),buyerChatsCount:0,views:0};
+ state.owned=state.owned.filter(a=>a.id!==id);state.myListings.unshift(l);listings.unshift(l);save();ovTab('profile');
 }
 function deleteListing(id){
  const item=state.myListings.find(x=>x.id===id);if(!item)return;
