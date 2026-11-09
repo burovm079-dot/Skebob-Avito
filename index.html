@@ -47,7 +47,7 @@ const districts=['Центр','Старый город','Северный','Юж
 const categories=['Все','Куртки','Кроссовки','Футболки','Худи','Джинсы','Брюки','Сумки','Бренды'];
 const districtCoordinates=[[118,82],[260,78],[402,90],[555,82],[672,135],[95,205],[245,205],[395,215],[545,205],[665,260],[110,340],[260,340],[410,350],[560,345],[675,390],[110,475],[260,475],[410,475],[560,475],[670,485]];
 const stock=[];
-if(!state.catalogClearedV1){state.myListings=[];state.catalogClearedV1=true;try{localStorage.setItem('skebobSave',JSON.stringify(state))}catch(e){}}
+if(!state.inventoryListingMigrationV1){state.myListings.forEach(x=>{if(x&&!state.owned.some(o=>o.id===x.id))state.owned.push({...x,inventorySource:'legacy-listing'})});state.myListings=[];state.inventoryListingMigrationV1=true;try{localStorage.setItem('skebobSave',JSON.stringify(state))}catch(e){}}
 const extra=[];
 let listings=stock.map((x,i)=>({id:'s'+i,title:x[0],cat:x[1],emoji:x[2],price:Math.max(1000,x[3]),market:Math.max(1000,x[4]),brand:x[5],desc:x[6],seller:['Артём','Даня','Кирилл','Максим','Илья','Саша'][i%6],district:districts[(i*7+3)%districts.length],condition:['Отличное','Хорошее','Есть следы носки'][i%3],mine:false}));
 extra.forEach((x,i)=>{let p=rand(1000,100000);listings.push({id:'e'+i,title:x[0],cat:x[1],emoji:x[2],price:p,market:Math.min(100000,Math.max(1000,Math.round(p*rand(88,125)/100))),brand:x[3],desc:'Вещь в хорошем состоянии. Подробности можно уточнить у продавца.',seller:['Егор','Миша','Денис','Влад','Антон','Рома'][i%6],district:districts[(i*7+5)%districts.length],condition:['Отличное','Хорошее','Есть следы носки'][i%3],mine:false})});
@@ -207,10 +207,36 @@ function renderChats(){
  $('ovContent').innerHTML=cards||'<div class="empty">Пока нет чатов. Открой объявление и нажми «Купить».</div>';
 }
 function renderProfile(){$('ovContent').innerHTML='<div class="card"><div class="row"><span>Баланс</span><b class="profit">'+money(state.balance)+'</b></div><div class="row" style="margin-top:10px"><span>Мои покупки</span><b>'+state.owned.length+'</b></div><div class="row" style="margin-top:10px"><span>Мои объявления</span><b>'+state.myListings.length+'</b></div></div><h3>Мои объявления</h3>'+(state.myListings.length?state.myListings.map(x=>'<div class="card"><div class="row"><b>'+x.emoji+' '+x.title+'</b><b>'+money(x.price)+'</b></div><div class="btnrow"><button class="btn danger" onclick="deleteListing(\''+x.id+'\')">Удалить</button></div></div>').join(''):'<div class="empty">Ты ещё не выставлял вещи.</div>')+'<h3>Мой гардероб</h3>'+(state.owned.length?state.owned.map(x=>'<div class="card"><div class="row"><b>'+x.emoji+' '+x.title+'</b><span class="small muted">Куплено за '+money(x.buyPrice)+'</span></div><button class="btn secondary" style="margin-top:10px" onclick="sellOwned(\''+x.id+'\')">Выставить на продажу</button></div>').join(''):'<div class="empty">Пока пусто — найди первую выгодную покупку!</div>')}
-function showCreate(){ $('ovContent').innerHTML='<h2>Новое объявление</h2><label class="small muted">Название вещи</label><input class="field" id="newTitle" placeholder="Например, Nike Air Max"><label class="small muted">Бренд</label><input class="field" id="newBrand" placeholder="Nike"><label class="small muted">Категория</label><select class="field" id="newCat">'+categories.slice(1).map(c=>'<option>'+c+'</option>').join('')+'</select><label class="small muted">Цена, ₽</label><input class="field" id="newPrice" type="number" placeholder="2500"><label class="small muted">Описание</label><textarea class="field" id="newDesc" rows="3" placeholder="Состояние, размер, особенности…"></textarea><button class="btn" style="width:100%" onclick="createListing()">Опубликовать объявление</button>'}
-function createListing(){const titleRaw=$('newTitle')?.value.trim()||'',brandRaw=$('newBrand')?.value.trim()||'Без бренда',descRaw=$('newDesc')?.value.trim()||'Состояние хорошее.',price=Number($('newPrice')?.value),cat=$('newCat')?.value;if(!titleRaw||titleRaw.length>70||brandRaw.length>35||descRaw.length>500||!Number.isSafeInteger(price)||price<100||price>100000){alert('Проверь данные: название до 70 символов, бренд до 35, описание до 500, цена от 100 до 100 000 ₽.');return}const title=escapeHTML(titleRaw),brand=escapeHTML(brandRaw),desc=escapeHTML(descRaw),x={id:'u'+Date.now()+Math.floor(Math.random()*1000),title,cat:categories.includes(cat)?cat:'Другое',emoji:'👕',price,market:Math.round(price*(rand(85,125)/100)),brand,desc,seller:'Ты',district:state.district,condition:'Хорошее',mine:true};state.myListings.unshift(x);listings.unshift(x);x.buyerNextAt=state.minutes+rand(8,28);x.buyerChatsCount=0;x.views=0;save();ovTab('profile')}
-function deleteListing(id){state.myListings=state.myListings.filter(x=>x.id!==id);listings=listings.filter(x=>x.id!==id);save();renderProfile()}
-function sellOwned(id){const x=state.owned.find(x=>x.id===id);if(!x)return;const raw=prompt('За сколько выставить '+x.title+'? Рыночная цена: '+money(Math.max(0,x.market-(x.conditionLoss||0))));if(raw===null)return;const price=Number(raw);if(!Number.isSafeInteger(price)||price<100||price>100000){alert('Укажи целую цену от 100 до 100 000 ₽.');return}const l={...x,id:'u'+Date.now()+Math.floor(Math.random()*1000),price,market:Math.max(1000,x.market-(x.conditionLoss||0)),seller:'Ты',district:state.district,mine:true,buyerNextAt:state.minutes+rand(8,28),buyerChatsCount:0,views:0};state.myListings.unshift(l);listings.unshift(l);state.owned=state.owned.filter(a=>a.id!==id);save();renderProfile()}
+function showCreate(){
+ if(!state.owned.length){$('ovContent').innerHTML='<h2>Новое объявление</h2><div class="empty">В гардеробе пока нет вещей для продажи. Сначала купи предмет в ленте — после покупки он появится здесь.</div><button class="btn secondary" style="width:100%" onclick="ovTab(\'feed\')">Перейти в каталог</button>';return}
+ $('ovContent').innerHTML='<h2>Новое объявление</h2><p class="small muted">Выбери вещь из своего гардероба. Название, бренд, категория и описание подставятся автоматически.</p><label class="small muted" for="inventoryItem">Какую вещь выставить?</label><select class="field" id="inventoryItem" onchange="previewInventoryItem()">'+state.owned.map(x=>'<option value="'+escapeHTML(x.id)+'">'+escapeHTML(x.title)+' · '+money(x.buyPrice||x.market||0)+'</option>').join('')+'</select><div id="inventoryPreview" class="card"></div><label class="small muted" for="newPrice">Цена продажи, ₽</label><input class="field" id="newPrice" type="number" min="100" max="100000" step="1" placeholder="Например, 2500"><button class="btn" style="width:100%" onclick="createListing()">Опубликовать объявление</button>';
+ previewInventoryItem();
+}
+function previewInventoryItem(){
+ const id=$('inventoryItem')?.value,x=state.owned.find(a=>a.id===id),preview=$('inventoryPreview');if(!preview)return;
+ if(!x){preview.innerHTML='<div class="muted">Предмет не найден.</div>';return}
+ preview.innerHTML='<div class="row"><b>'+escapeHTML(x.title)+'</b><span class="pill">'+escapeHTML(x.cat||'Вещь')+'</span></div><p class="small muted" style="margin:8px 0">'+escapeHTML(x.brand||'Без бренда')+'</p><p style="margin:0">'+escapeHTML(x.desc||'Описание отсутствует.')+'</p><div class="small muted" style="margin-top:9px">Ориентир цены: '+money(Math.max(100,Number(x.market||x.buyPrice||1000)-Number(x.conditionLoss||0)))+'</div>';
+ const price=$('newPrice');if(price&&!price.value)price.value=Math.min(100000,Math.max(100,Math.round((Number(x.market||x.buyPrice||1000)-Number(x.conditionLoss||0))/100)*100));
+}
+function createListing(){
+ const id=$('inventoryItem')?.value,x=state.owned.find(a=>a.id===id),price=Number($('newPrice')?.value);
+ if(!x){alert('Сначала выбери предмет из своего гардероба.');return}
+ if(!Number.isSafeInteger(price)||price<100||price>100000){alert('Укажи целую цену от 100 до 100 000 ₽.');return}
+ if(state.myListings.some(a=>a.inventoryId===id)){alert('Этот предмет уже выставлен на продажу.');return}
+ const market=Math.max(100,Number(x.market||x.buyPrice||price)-Number(x.conditionLoss||0));
+ const l={...x,id:'u'+Date.now()+Math.floor(Math.random()*1000),inventoryId:id,price,market,seller:'Ты',district:state.district,mine:true,condition:x.condition||'Состояние уточняется',buyerNextAt:state.minutes+rand(8,28),buyerChatsCount:0,views:0};
+ state.owned=state.owned.filter(a=>a.id!==id);state.myListings.unshift(l);listings.unshift(l);save();ovTab('profile');
+}
+function deleteListing(id){
+ const item=state.myListings.find(x=>x.id===id);if(!item)return;
+ state.myListings=state.myListings.filter(x=>x.id!==id);listings=listings.filter(x=>x.id!==id);
+ const {buyerNextAt,buyerChatsCount,views,...returned}=item;state.owned.unshift({...returned,id:item.inventoryId||('inv'+Date.now()+rand(100,999))});
+ save();renderProfile();
+}
+function sellOwned(id){
+ const x=state.owned.find(x=>x.id===id);if(!x)return;
+ showCreate();const select=$('inventoryItem');if(select){select.value=id;previewInventoryItem()}
+}
 function openAdminPanel(){
  const entered=prompt('Введите код доступа к админ-панели:');
  if(entered===null)return;
