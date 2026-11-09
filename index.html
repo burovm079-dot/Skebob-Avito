@@ -59,7 +59,7 @@ function renderBank(){const balanceEl=$('bankBalance'),transactionsEl=$('bankTra
 function save(){try{localStorage.setItem('skebobSave',JSON.stringify(state))}catch(e){}const balance=$('balance'),district=$('currentDistrict'),routeClock=$('routeClock'),gameTime=$('gameTime');if(balance)balance.textContent='₽ '+state.balance.toLocaleString('ru-RU');if(district)district.textContent=state.district;if(routeClock)routeClock.textContent=clock();if(gameTime)gameTime.textContent=clock()}
 function clock(){let m=9*60+41+state.minutes;return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
 function updateClock(){const value=clock();['statusTime','lockTime','homeClock','gameTime','routeClock'].forEach(id=>{const el=$(id);if(el)el.textContent=value});const dateEl=$('lockDate');if(dateEl){let dayOffset=Math.floor(state.minutes/(24*60));let d=new Date(2026,10,8+dayOffset);dateEl.textContent=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}}
-let lastRealTick=Date.now();setInterval(()=>{let now=Date.now();let elapsed=Math.floor((now-lastRealTick)/1000);if(elapsed>0){state.minutes+=elapsed;lastRealTick+=elapsed*1000;save();updateClock()}},200);updateClock();
+let lastRealTick=Date.now();setInterval(()=>{let now=Date.now();let elapsed=Math.floor((now-lastRealTick)/1000);if(elapsed>0){state.minutes+=elapsed;lastRealTick+=elapsed*1000;processBuyerActivity(elapsed);save();updateClock()}},200);updateClock();
 const lock=$('lock');let startY=0,lockDragging=false;function unlock(){if(lock)lock.classList.add('hide')}if(lock){lock.addEventListener('pointerdown',e=>{startY=e.clientY;lockDragging=true;unlock()},{passive:true});lock.addEventListener('pointerup',e=>{if(lockDragging&&startY-e.clientY>25)unlock();lockDragging=false});lock.addEventListener('pointercancel',()=>{lockDragging=false});lock.addEventListener('touchstart',e=>{startY=e.touches&&e.touches[0]?e.touches[0].clientY:0;lockDragging=true},{passive:true});lock.addEventListener('touchend',e=>{const end=e.changedTouches&&e.changedTouches[0]?e.changedTouches[0].clientY:startY;if(lockDragging&&startY-end>25)unlock();lockDragging=false},{passive:true});lock.addEventListener('click',unlock);lock.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')unlock()})}
 function show(id){const target=$(id);if(!target)return;lock.classList.add('hide');document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));target.classList.add('active')}
 function goHome(){lock.classList.add('hide');show('home');window.scrollTo(0,0)}function openApp(id){show(id);if(id==='route')renderDistricts();if(id==='bank')renderBank()}function openOvito(){show('ovito');ovTab('feed')}
@@ -75,11 +75,70 @@ function startChat(id){let item=listings.find(x=>x.id===id);if(!item)return;if(i
 function renderChat(){
  let c=state.chats.find(x=>x.id===currentChat);if(!c)return;
  let item=listings.find(x=>x.id===c.itemId),history=c.messages||[],gone=!item;
- const bubbles=history.map(m=>'<div class="chatbubble '+(m.from==='me'?'me':'')+'">'+m.text+'</div>').join('');
+ const bubbles=history.map(m=>'<div class="chatbubble '+(m.from==='me'?'me':'')+'">'+escapeHTML(m.text)+'</div>').join('');
  const price=item?money(item.price):'Объявление удалено';
- let controls=gone?'<div class="notice">Это объявление больше недоступно. Старую переписку можно посмотреть, но продолжить торг нельзя.</div>':c.blocked?'<div class="notice">Продавец заблокировал вас. Переписка закрыта.</div>':c.agreed?'<div class="notice">Вы договорились о покупке! Продавец назначил район встречи.</div><button class="btn" style="width:100%" onclick="planDeal(\''+c.id+'\')">Договориться о встрече</button>':'<div class="chatbox"><input class="field" id="offer" placeholder="Предложить свою цену…" type="number" min="1"><button class="btn" onclick="sendOffer()">Отправить</button></div><div class="small muted">Попытка торга: '+(c.attempts||0)+' / 4</div>';
- $('chatContent').innerHTML='<h2>'+c.seller+' · '+c.title+'</h2><div class="card"><div class="row"><span class="muted">Цена в объявлении</span><b>'+price+'</b></div><div class="row"><span class="muted">Статус</span><b>'+c.status+'</b></div></div><div id="bubbles">'+bubbles+'</div>'+controls;
+ let controls='';
+ if(c.kind==='buyer'){
+  if(c.status==='Продано')controls='<div class="notice">Продажа завершена. Деньги зачислены на баланс.</div>';
+  else if(gone)controls='<div class="notice">Объявление больше недоступно.</div>';
+  else if(c.agreed)controls='<div class="notice">Покупатель согласился на '+money(c.offerPrice)+'.</div><button class="btn" style="width:100%" onclick="completeBuyerSale()">Завершить продажу · '+money(c.offerPrice)+'</button>';
+  else controls='<div class="notice">Покупатель предлагает '+money(c.offerPrice||0)+'. Ответь ему или прими предложение.</div><div class="chatbox"><input class="field" id="buyerReply" maxlength="240" placeholder="Написать покупателю…"><button class="btn" onclick="sendBuyerReply()">Отправить</button></div><button class="btn" style="width:100%;margin-top:9px" onclick="acceptBuyerOffer()">Принять '+money(c.offerPrice||0)+'</button>';
+ }else{
+  controls=gone?'<div class="notice">Это объявление больше недоступно. Старую переписку можно посмотреть, но продолжить торг нельзя.</div>':c.blocked?'<div class="notice">Продавец заблокировал вас. Переписка закрыта.</div>':c.agreed?'<div class="notice">Вы договорились о покупке! Продавец назначил район встречи.</div><button class="btn" style="width:100%" onclick="planDeal(\''+c.id+'\')">Договориться о встрече</button>':'<div class="chatbox"><input class="field" id="offer" placeholder="Предложить свою цену…" type="number" min="1"><button class="btn" onclick="sendOffer()">Отправить</button></div><div class="small muted">Попытка торга: '+(c.attempts||0)+' / 4</div>';
+ }
+ $('chatContent').innerHTML='<h2>'+escapeHTML(c.seller)+' · '+escapeHTML(c.title)+'</h2><div class="card"><div class="row"><span class="muted">Цена в объявлении</span><b>'+price+'</b></div><div class="row"><span class="muted">Статус</span><b>'+escapeHTML(c.status)+'</b></div></div><div id="bubbles">'+bubbles+'</div>'+controls;
  show('chat')
+}
+function processBuyerActivity(){
+ if(!Array.isArray(state.myListings)||!state.myListings.length)return;
+ let changed=false;
+ const active=state.myListings.filter(x=>x&&x.id&&!state.chats.some(c=>c.kind==='buyer'&&c.itemId===x.id&&c.status==='Продано'));
+ for(const own of active){
+  const listing=listings.find(x=>x.id===own.id);if(!listing)continue;
+  if(!Number.isFinite(Number(own.buyerNextAt))){own.buyerNextAt=state.minutes+rand(8,28);changed=true;continue}
+  if(state.minutes<own.buyerNextAt)continue;
+  const count=Number(own.buyerChatsCount)||0;
+  if(count>=4){own.buyerNextAt=state.minutes+rand(240,480);changed=true;continue}
+  const names=['Алина','Максим','Денис','Полина','Илья','София','Кирилл','Маша','Егор','Вика'];
+  const name=names[rand(0,names.length-1)];
+  const offer=Math.max(100,Math.round(listing.price*rand(82,97)/100/50)*50);
+  const phrases=['Здравствуйте! Объявление ещё актуально?','Добрый день! Могу забрать, если договоримся по цене.','Привет! Подскажите, вещь в наличии?','Здравствуйте! Интересует ваше объявление. Есть небольшой торг?'];
+  const c={id:'buyer'+Date.now()+rand(100,999),kind:'buyer',itemId:listing.id,title:listing.title,seller:name,buyerName:name,offerPrice:offer,attempts:0,agreed:false,status:'Новое сообщение',messages:[{from:'buyer',text:phrases[rand(0,phrases.length-1)]+' Готов(а) предложить '+money(offer)+'.'}]};
+  state.chats.unshift(c);own.buyerChatsCount=count+1;own.buyerNextAt=state.minutes+rand(90,240);changed=true;
+  showBuyerToast('Новое сообщение от '+name+' по объявлению «'+listing.title+'»');
+ }
+ if(changed)save();
+}
+function showBuyerToast(message){
+ let toast=document.getElementById('buyerToast');
+ if(!toast){toast=document.createElement('div');toast.id='buyerToast';toast.style.cssText='position:fixed;top:calc(18px + env(safe-area-inset-top));left:16px;right:16px;z-index:9999;padding:13px 16px;border:1px solid #52647a;border-radius:15px;background:#1d2a3b;color:#f4f7fb;box-shadow:0 8px 28px #0006;font-size:14px;';document.body.appendChild(toast)}
+ toast.textContent='💬 '+message;toast.style.display='block';clearTimeout(window.buyerToastTimer);window.buyerToastTimer=setTimeout(()=>{toast.style.display='none'},4200);
+}
+function sendBuyerReply(){
+ const c=state.chats.find(x=>x.id===currentChat);if(!c||c.kind!=='buyer'||c.status==='Продано')return;
+ const field=$('buyerReply'),message=(field?.value||'').trim();if(!message){alert('Напиши сообщение покупателю.');return}
+ c.messages.push({from:'me',text:message});
+ const lower=message.toLowerCase();let reply;
+ if(/актуал|да,|да!|в наличии|можно забрать/.test(lower)){reply='Отлично! Когда и в каком районе удобно встретиться?';c.status='Заинтересован';}
+ else if(/нет|не прода|отказ/.test(lower)){reply='Понял(а), тогда пока подумаю. Спасибо!';c.status='Думает';}
+ else if(/цен|торг|скид|руб|₽|дорог/.test(lower)){const ceiling=listings.find(x=>x.id===c.itemId)?.price||c.offerPrice;c.offerPrice=Math.min(ceiling,c.offerPrice+rand(100,300));reply='Спасибо за ответ. Могу поднять предложение до '+money(c.offerPrice)+'.';c.status='Торг';}
+ else{reply='Хорошо, понял(а). Я заинтересован(а), давайте обсудим детали.';c.status='Переписка';}
+ c.messages.push({from:'buyer',text:reply});save();renderChat();
+}
+function acceptBuyerOffer(){
+ const c=state.chats.find(x=>x.id===currentChat),item=c&&listings.find(x=>x.id===c.itemId);
+ if(!c||c.kind!=='buyer'||!item||c.status==='Продано')return;
+ c.agreed=true;c.status='Покупатель готов к встрече';c.messages.push({from:'me',text:'Согласен(на) на '+money(c.offerPrice)+'. Давайте договоримся о встрече.'},{from:'buyer',text:'Отлично! Считаю, что договорились. Нажми «Завершить продажу», когда передашь вещь.'});
+ save();renderChat();
+}
+function completeBuyerSale(){
+ const c=state.chats.find(x=>x.id===currentChat),item=c&&listings.find(x=>x.id===c.itemId);
+ if(!c||c.kind!=='buyer'||!item||!c.agreed||c.status==='Продано')return;
+ const amount=Math.max(0,Number(c.offerPrice)||0);if(!Number.isSafeInteger(amount)||amount<1){alert('Некорректная сумма сделки.');return}
+ state.balance+=amount;addTx('Продажа: '+item.title,amount,'Доход');
+ listings=listings.filter(x=>x.id!==item.id);state.myListings=state.myListings.filter(x=>x.id!==item.id);
+ c.status='Продано';c.messages.push({from:'me',text:'Сделка завершена. Спасибо за покупку!'},{from:'buyer',text:'Спасибо! Хорошего дня!'});
+ save();renderChat();
 }
 function sendOffer(){let c=state.chats.find(x=>x.id===currentChat);if(!c||c.blocked||c.agreed)return;let item=listings.find(x=>x.id===c.itemId);if(!item){alert('Это объявление больше недоступно.');return}let field=$('offer'),v=Number(field&&field.value);if(!Number.isSafeInteger(v)||v<1||v>1000000){alert('Введи корректное предложение от 1 до 1 000 000 ₽.');return}c.attempts=(c.attempts||0)+1;c.messages.push({from:'me',text:'Предлагаю '+money(v)});const blockAt=c.blockAt||4;if(c.attempts>=blockAt&&v<item.price*.82){c.blocked=true;c.status='Переписка закрыта';c.messages.push({from:'seller',text:'К сожалению, мы слишком далеко по цене. Не буду продолжать торг.'})}else if(v>=item.price*.94){c.agreed=true;c.dealPrice=Math.min(v,item.price);c.status='Договорились';c.messages.push({from:'seller',text:'Хорошо, договорились за '+money(c.dealPrice)+'. Могу встретиться в районе '+item.district+'.'})}else{let counter=Math.min(item.price,Math.max(v+rand(80,250),Math.round(item.price*.9)));c.messages.push({from:'seller',text:['Слишком мало. Могу уступить до '+money(counter)+'.','Цена и так хорошая, давайте '+money(counter)+'.','За такую сумму не готов. Предлагаю '+money(counter)+'.'][rand(0,2)]})}save();renderChat()}
 function planDeal(id){let c=state.chats.find(x=>x.id===id),item=c&&listings.find(x=>x.id===c.itemId);if(!c||!item||!c.agreed){alert('Не удалось открыть встречу: объявление или переписка недоступны.');return}dealDistrict=item.district;$('chatContent').innerHTML='<h2>Назначение встречи</h2><div class="card">Продавец выбрал район: <b>'+escapeHTML(dealDistrict)+'</b><p class="muted small" style="margin:7px 0 0">Выбери время. Время поездки будет учитываться.</p></div><label class="muted small">Время встречи</label><select class="field" id="meetTime">'+Array.from({length:30},(_,i)=>{let t=clock(),parts=t.split(':').map(Number),mins=parts[0]*60+parts[1]+(i+1)*30;return '<option>'+String(Math.floor(mins/60)%24).padStart(2,'0')+':'+String(mins%60).padStart(2,'0')+'</option>'}).join('')+'</select><button class="btn" style="width:100%" onclick="confirmDeal(\''+id+'\')">Подтвердить встречу</button>';show('chat')}
