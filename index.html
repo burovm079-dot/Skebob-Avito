@@ -86,7 +86,7 @@
   <div class="ovito-searchrow"><div class="ovito-searchbox">⌕ <input class="search" id="search" placeholder="Поиск по объявлению..." oninput="renderListings()"></div><button class="head-icon" onclick="toggleSort()" aria-label="Сортировка">↕</button><button class="head-icon" onclick="toggleFilters()" aria-label="Фильтры">☷</button></div>
   <div class="chips" id="filters"></div>
  </div>
- <div class="ovito-pagehead" id="ovPageHead"><button onclick="ovTab('feed')" aria-label="Назад">←</button><span id="ovPageTitle">Избранное</span><button id="ovPageAction" onclick="clearChatRead()" aria-label="Действие"></button></div>
+ <div class="ovito-pagehead" id="ovPageHead"><button onclick="ovTab('feed')" aria-label="Назад">←</button><span id="ovPageTitle">Избранное</span><button id="ovPageAction" onclick="markAllChatsRead()" aria-label="Отметить все прочитанными"></button></div>
 </div>
 <div class="ovito-scroll"><div id="ovContent"></div></div>
 <nav class="bottomnav">
@@ -183,7 +183,7 @@ function ovTab(tab,el){
  const feed=tab==='feed';feedHead.style.display=feed?'block':'none';pageHead.style.display=feed?'none':'flex';
  search.style.display=feed?'block':'none';filters.style.display=feed?'':'none';
  $('ovPageTitle').textContent=({favorites:'Избранное',chats:'Чаты',profile:'Профиль'})[tab]||'Новое объявление';
- $('ovPageAction').textContent=tab==='chats'?'♧':'';
+ $('ovPageAction').textContent=tab==='chats'?'✓':'';
  const content=$('ovContent');content.scrollTop=0;
  if(tab==='feed')renderListings();else if(tab==='favorites')renderFavorites();else if(tab==='chats')renderChats();else if(tab==='profile')renderProfile();
 }
@@ -398,6 +398,7 @@ function renderChats(){
  $('ovContent').innerHTML='<div class="ov-chat-tabs"><button class="'+(ovChatTab==='incoming'?'active':'')+'" onclick="setChatTab(\'incoming\')">Входящие</button><button class="'+(ovChatTab==='outgoing'?'active':'')+'" onclick="setChatTab(\'outgoing\')">Исходящие</button></div>'+(cards||'<div class="ov-empty"><div class="ov-empty-icon">▱</div>Нет '+(ovChatTab==='incoming'?'входящих':'исходящих')+' сообщений</div>');
 }
 function setChatTab(tab){ovChatTab=tab;renderChats()}
+function markAllChatsRead(){state.chats.forEach(c=>c.unread=false);save();renderChats()}
 function renderProfile(){
  $('ovContent').innerHTML='<div class="ov-profile-card"><div class="ov-section-title">Профиль</div><div class="row"><span>Баланс</span><b class="profit">'+money(state.balance)+'</b></div><div class="row" style="margin-top:12px"><span>Мои покупки</span><b>'+state.owned.length+'</b></div><div class="row" style="margin-top:12px"><span>Мои объявления</span><b>'+state.myListings.length+'</b></div></div><div class="ov-section-title">Мои объявления</div>'+(state.myListings.length?state.myListings.map(x=>'<div class="ov-inventory-row"><div class="ov-inventory-info"><b>'+escapeHTML(x.title)+'</b><div class="ov-inventory-price">'+money(x.price)+'</div></div><button class="ov-action edit" onclick="deleteListing(\''+x.id+'\')">Удалить</button></div>').join(''):'<div class="empty">Ты ещё не выставлял объявления</div>')+'<div class="ov-section-title" style="margin-top:20px">Мой гардероб</div>'+(state.owned.length?state.owned.map(x=>'<div class="ov-inventory-row">'+(x.image?'<img class="ov-inventory-photo" src="'+escapeHTML(x.image)+'">':'<div class="ov-inventory-photo" style="display:grid;place-items:center">'+(x.emoji||'📦')+'</div>')+'<div class="ov-inventory-info"><b>'+escapeHTML(x.title)+'</b><div class="ov-inventory-price">'+money(x.buyPrice||x.market||0)+'</div></div></div>').join(''):'<div class="empty">Гардероб пока пуст</div>');
 }
