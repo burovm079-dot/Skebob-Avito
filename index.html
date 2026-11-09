@@ -418,8 +418,8 @@ function previewInventoryItem(){
  preview.innerHTML=(photo?'<div style="height:180px;margin-bottom:12px;border-radius:12px;overflow:hidden;background:#101a28"><img src="'+photo+'" alt="Фото предмета" style="width:100%;height:100%;object-fit:contain"></div>':'<div class="itemart" style="height:150px;margin-bottom:12px">'+(x.emoji||'👕')+'</div>')+'<div class="row"><b>'+escapeHTML(x.title)+'</b><span class="pill">'+escapeHTML(x.cat||'Вещь')+'</span></div><p class="small muted" style="margin:8px 0">'+escapeHTML(x.brand||'Без бренда')+'</p><p style="margin:0">'+escapeHTML(x.desc||'Описание отсутствует.')+'</p><div class="small muted" style="margin-top:9px">Ориентир цены: '+money(Math.max(100,Number(x.market||x.buyPrice||1000)-Number(x.conditionLoss||0)))+'</div>';
  const price=$('newPrice');if(price&&!price.value)price.value=Math.min(100000,Math.max(100,Math.round((Number(x.market||x.buyPrice||1000)-Number(x.conditionLoss||0))/100)*100));
 }
-function createListing(){
- const id=$('inventoryItem')?.value,x=state.owned.find(a=>a.id===id),price=Number($('newPrice')?.value);
+function createListing(selectedId){
+ const id=selectedId||$('inventoryItem')?.value,x=state.owned.find(a=>a.id===id),price=Number($('newPrice')?.value);
  if(!x){alert('Сначала выбери предмет из своего гардероба.');return}
  if(!Number.isSafeInteger(price)||price<100||price>100000){alert('Укажи целую цену от 100 до 100 000 ₽.');return}
  if(state.myListings.some(a=>a.inventoryId===id)){alert('Этот предмет уже выставлен на продажу.');return}
