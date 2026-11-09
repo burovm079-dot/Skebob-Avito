@@ -109,14 +109,14 @@ const $=id=>document.getElementById(id);
 // Fallback: an unexpected startup error must never leave the lock screen covering the game.
 window.addEventListener('error',()=>{const overlay=document.getElementById('lock'),home=document.getElementById('home');if(overlay)overlay.classList.add('hide');if(home)home.classList.add('active')});
 
-// Надёжное сохранение прогресса: 1000 ₽ выдаются только при первом запуске.
+// Надёжное сохранение прогресса: 2000 ₽ выдаются только при первом запуске или сбросе.
 const freshStart=new URLSearchParams(location.search).has('newgame');
 let state=null;
 try{state=freshStart?null:JSON.parse(localStorage.getItem('skebobSave')||'null')}catch(e){state=null}
 if(state===null || Array.isArray(state) || typeof state !== "object"){
- state={balance:1000,initialBalance:1000,district:'Центр',minutes:0,items:[],chats:[],myListings:[],owned:[],deal:null,blocked:[],transactions:[],favorites:[]};
+ state={balance:2000,initialBalance:2000,district:'Центр',minutes:0,items:[],chats:[],myListings:[],owned:[],deal:null,blocked:[],transactions:[],favorites:[]};
 }else{
- state.balance=Number.isFinite(Number(state.balance))?Math.max(0,Number(state.balance)):1000;
+ state.balance=Number.isFinite(Number(state.balance))?Math.max(0,Number(state.balance)):2000;
  state.initialBalance=Number.isFinite(Number(state.initialBalance))?Number(state.initialBalance):state.balance;
  state.district=state.district||'Центр';state.minutes=Number.isFinite(Number(state.minutes))?Math.max(0,Number(state.minutes)):0;
  state.items=Array.isArray(state.items)?state.items:[];state.chats=Array.isArray(state.chats)?state.chats:[];state.myListings=Array.isArray(state.myListings)?state.myListings:[];state.owned=Array.isArray(state.owned)?state.owned:[];state.transactions=Array.isArray(state.transactions)?state.transactions:[];state.chats=state.chats.filter(c=>c&&typeof c==='object').map(c=>({...c,id:c.id||('c'+Date.now()+Math.floor(Math.random()*10000)),messages:Array.isArray(c.messages)?c.messages:[],status:c.status||'Торг'}));state.deal=state.deal&&typeof state.deal==='object'?state.deal:null;state.blocked=Array.isArray(state.blocked)?state.blocked:[];state.favorites=Array.isArray(state.favorites)?state.favorites:[];
