@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "Ovito: Resale Simulator",
+  "short_name": "Ovito",
+  "description": "Покупай, продавай и развивай свой бизнес в мире Ovito.",
+  "lang": "ru",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101522",
+  "theme_color": "#101522",
+  "icons": [
+    {
+      "src": "./icons/ovito.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
