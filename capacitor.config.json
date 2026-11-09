@@ -1,0 +1,9 @@
+{
+  "appId": "com.ovito.resalesimulator",
+  "appName": "Ovito",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
