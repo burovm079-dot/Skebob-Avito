@@ -71,7 +71,7 @@
 #ovito .ov-detail-card{background:#fff;border-radius:18px;padding:16px}
 #ovito .empty{background:#fff;color:#7c858d;border-radius:18px;padding:20px;text-align:center}
 @media(max-width:380px){#ovito .ov-card-photo{height:195px}#ovito .ov-card-title{font-size:19px}#ovito .ov-price{font-size:24px}#ovito .ov-location{font-size:14px;padding:10px 11px}#ovito .ov-inventory-photo{width:78px;flex-basis:78px}}
-</style></head><body><main class="phone"><div class="status"><span id="statusTime">09:41</span><span>●●●  ▰</span></div>
+#ovito .ov-chat-tabs button{flex:1}#ovito .ov-chat-row{gap:9px;padding:13px 0}#ovito .ov-chat-thumb{width:48px;height:48px;flex:0 0 48px;border-radius:11px;object-fit:cover;background:#eef0f2}#ovito .ov-chat-thumb-empty{display:grid;place-items:center;font-size:23px}#ovito .ov-chat-main{flex:1;min-width:0}#ovito .ov-chat-main b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#ovito .ov-chat-itemtitle{font-size:12px;margin-top:3px}#ovito .ov-chat-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}#ovito .ov-chat-kind{font-size:10px;color:#8a9299}#ovito .ov-chat-row.unread .ov-chat-main b{color:#0785f5}#ovito .ov-chat-row.unread .ov-chat-preview:last-child{color:#333;font-weight:650}</style></head><body><main class="phone"><div class="status"><span id="statusTime">09:41</span><span>●●●  ▰</span></div>
 <section class="lock" id="lock"><div><div class="locktime" id="lockTime">09:41</div><div class="lockdate" id="lockDate">Понедельник, 8 ноября</div></div><div class="lockhint">Нажмите или смахните вверх, чтобы разблокировать<div class="swipebar"></div></div></section>
 <section class="screen active" id="home"><div class="homewall"><div class="greeting">Мой телефон · <span id="homeClock">09:41</span></div><div class="appgrid">
 <button class="appicon" onclick="openOvito()"><img class="ico-img" src="IMG_20261108_232857_900.jpg" alt="">Ovito</button>
@@ -174,7 +174,7 @@ function show(id){const target=$(id);if(!target)return;lock.classList.add('hide'
 function goHome(){lock.classList.add('hide');show('home');window.scrollTo(0,0)}function openApp(id){show(id);if(id==='route')renderDistricts();if(id==='bank')renderBank()}function openOvito(){show('ovito');ovTab('feed')}
 function keepGameInHistory(){try{history.pushState({skebobGame:true},'',location.href)}catch(e){}}
 keepGameInHistory();window.addEventListener('popstate',()=>{lock.classList.add('hide');show('home');window.scrollTo(0,0);keepGameInHistory()});
-let ovSort='default',ovChatTab='incoming';
+let ovSort='default',ovChatTab='all';
 function ovTab(tab,el){
  const nav=document.querySelector('#ovito .bottomnav');if(!nav)return;
  nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
@@ -389,13 +389,21 @@ function cancelDeal(){const d=state.deal,c=d&&state.chats.find(x=>x.id===d.chatI
 function completeDeal(damage){const d=state.deal,c=d&&state.chats.find(x=>x.id===d.chatId),item=d&&listings.find(x=>x.id===d.itemId),price=d&&Number(d.price),meetAt=dealMeetAt(d);if(!d||!c||!item||!c.agreed||c.itemId!==d.itemId||state.district!==d.district||(meetAt!==null&&state.minutes<meetAt)){$('chatContent').innerHTML='<div class="notice">Сделка недоступна: проверь договорённость, район и время встречи.</div>';return}if(!Number.isFinite(price)||price<1||price>Number(item.price)||state.balance<price){$('chatContent').innerHTML='<div class="notice">Не хватает денег для завершения сделки.</div>';return}state.balance-=price;addTx('Покупка: '+item.title,price);state.owned.push({...item,buyPrice:price,conditionLoss:Math.max(0,Number(damage)||0)});listings=listings.filter(x=>x.id!==item.id);c.status='Куплено';c.messages.push({from:'seller',text:'Спасибо за покупку! Хорошего дня.'});state.deal=null;save();$('chatContent').innerHTML='<h2 class="profit">Покупка завершена!</h2><div class="card"><p>'+escapeHTML(item.title)+' теперь у тебя.</p><p>Потрачено: <b>'+money(price)+'</b></p><p>Рыночная стоимость с учётом состояния: <b>'+money(Math.max(0,item.market-(Number(damage)||0)))+'</b></p></div><button class="btn" style="width:100%" onclick="openOvito();ovTab(\'profile\')">Перейти в профиль</button>'}
 function openChatFromList(id){currentChat=id;renderChat()}
 function renderChats(){
- const selected=state.chats.filter(c=>ovChatTab==='incoming'?c.kind==='buyer':c.kind!=='buyer');
- const ordered=[...selected].sort((a,b)=>Number(!!b.unread)-Number(!!a.unread)||Number(b.createdAt||0)-Number(a.createdAt||0));
+ const selected=state.chats.filter(c=>ovChatTab==='all'||(ovChatTab==='incoming'?c.kind==='buyer':c.kind!=='buyer'));
+ const ordered=[...selected].sort((a,b)=>{
+  const au=Number(!!a.unread),bu=Number(!!b.unread);if(au!==bu)return bu-au;
+  return Number(b.createdAt||0)-Number(a.createdAt||0);
+ });
  const cards=ordered.map(c=>{
-  const last=(c.messages||[]).slice(-1)[0],name=c.buyerName||c.seller||'Покупатель';
-  return '<div class="ov-chat-row" role="button" tabindex="0" onclick="openChatFromList(\''+c.id+'\')"><div class="ov-avatar">'+escapeHTML(chatInitial(name))+'</div><div class="ov-chat-main"><b>'+escapeHTML(name)+'</b><div class="ov-chat-preview">'+escapeHTML(c.status||'Переписка')+'</div><div class="ov-chat-preview">'+escapeHTML(last?.text||c.title||'Объявление')+'</div></div><div class="ov-chat-time">'+(c.unread?'●':'')+'</div></div>';
+  const history=Array.isArray(c.messages)?c.messages:[],last=history[history.length-1];
+  const name=c.buyerName||c.seller||'Покупатель';
+  const item=listings.find(x=>x.id===c.itemId);
+  const preview=last?.text||c.status||'Переписка начата';
+  const photo=item?.image?'<img class="ov-chat-thumb" src="'+escapeHTML(item.image)+'" alt="">':'<div class="ov-chat-thumb ov-chat-thumb-empty">'+escapeHTML(item?.emoji||'📦')+'</div>';
+  return '<div class="ov-chat-row '+(c.unread?'unread':'')+'" role="button" tabindex="0" onclick="openChatFromList(\''+c.id+'\')">'+photo+'<div class="ov-avatar">'+escapeHTML(chatInitial(name))+'</div><div class="ov-chat-main"><b>'+escapeHTML(name)+'</b><div class="ov-chat-preview ov-chat-itemtitle">'+escapeHTML(c.title||item?.title||'Объявление')+'</div><div class="ov-chat-preview">'+escapeHTML(preview)+'</div></div><div class="ov-chat-side"><span class="ov-chat-time">'+(c.unread?'●':'')+'</span><span class="ov-chat-kind">'+(c.kind==='buyer'?'Входящее':'Исходящее')+'</span></div></div>';
  }).join('');
- $('ovContent').innerHTML='<div class="ov-chat-tabs"><button class="'+(ovChatTab==='incoming'?'active':'')+'" onclick="setChatTab(\'incoming\')">Входящие</button><button class="'+(ovChatTab==='outgoing'?'active':'')+'" onclick="setChatTab(\'outgoing\')">Исходящие</button></div>'+(cards||'<div class="ov-empty"><div class="ov-empty-icon">▱</div>Нет '+(ovChatTab==='incoming'?'входящих':'исходящих')+' сообщений</div>');
+ const tabs='<div class="ov-chat-tabs"><button class="'+(ovChatTab==='all'?'active':'')+'" onclick="setChatTab(\'all\')">Все</button><button class="'+(ovChatTab==='incoming'?'active':'')+'" onclick="setChatTab(\'incoming\')">Входящие</button><button class="'+(ovChatTab==='outgoing'?'active':'')+'" onclick="setChatTab(\'outgoing\')">Исходящие</button></div>';
+ $('ovContent').innerHTML=tabs+(cards||'<div class="ov-empty"><div class="ov-empty-icon">▱</div>'+(ovChatTab==='all'?'Пока нет переписок':'Нет '+(ovChatTab==='incoming'?'входящих':'исходящих')+' сообщений')+'</div>');
 }
 function setChatTab(tab){ovChatTab=tab;renderChats()}
 function markAllChatsRead(){state.chats.forEach(c=>c.unread=false);save();renderChats()}
